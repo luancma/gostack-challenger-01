@@ -4,8 +4,33 @@ const server = express();
 
 server.use(express.json());
 
-//Initial value of projects
+// Request count
+let countRequest = 0;
+// Initial value of projects
 const projects = [];
+
+//Middleware to validate project
+function validateProject(req, res, next) {
+  const { id } = req.params;
+  const project = projects.find(i => i.id == id);
+
+  if (!project) {
+    return res.status(400).json({ error: "Project not found" });
+  }
+  return next();
+}
+
+function countRequests(req, res, next) {
+  countRequest++;
+
+  console.log(`Number of requests: ${countRequest}`);
+
+  return next();
+}
+
+// Count middleware
+
+server.use(countRequests);
 
 // Routes
 server.get("/projects", (req, res) => {
@@ -26,10 +51,12 @@ server.post("/projects", (req, res) => {
   return res.json(project);
 });
 
+server.use(validateProject);
+
 server.delete("/projects/:id", (req, res) => {
   const { id } = req.params;
 
-  const projectId = projects.find(i => i.id === id);
+  const projectId = projects.find(i => i.id == id);
 
   projects.splice(projectId, 1);
 
